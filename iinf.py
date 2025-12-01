@@ -9,6 +9,7 @@ if sys.platform == 'win32':
 
 # Add the current directory to Python path so we can import infinite_arrays
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'infinite_arrays'))
 
 # Now we can import the module
 import numpy as np
@@ -49,6 +50,58 @@ class bool_inf:
         if isinstance(other, bool_inf):
             return self._value == other._value and self._is_inf == other._is_inf
         return self._value == bool(other)
+    
+    def __lt__(self, other):
+        """Less than comparison. Ordering: ∞F < False < True < ∞T"""
+        if isinstance(other, bool_inf):
+            # Both are bool_inf
+            if self._is_inf and other._is_inf:
+                # ∞F < ∞T
+                return not self._value and other._value
+            elif self._is_inf:
+                # ∞F < False/True, ∞T > False/True
+                return not self._value
+            elif other._is_inf:
+                # False/True < ∞T, False/True > ∞F
+                return other._value
+            else:
+                # Both regular: False < True
+                return self._value < other._value
+        # Compare with regular bool
+        other_val = bool(other)
+        if self._is_inf:
+            return not self._value  # ∞F < anything, ∞T > anything
+        return self._value < other_val
+    
+    def __gt__(self, other):
+        """Greater than comparison. Ordering: ∞F < False < True < ∞T"""
+        if isinstance(other, bool_inf):
+            # Both are bool_inf
+            if self._is_inf and other._is_inf:
+                # ∞T > ∞F
+                return self._value and not other._value
+            elif self._is_inf:
+                # ∞T > False/True, ∞F < False/True
+                return self._value
+            elif other._is_inf:
+                # False/True < ∞T, False/True > ∞F
+                return not other._value
+            else:
+                # Both regular: True > False
+                return self._value > other._value
+        # Compare with regular bool
+        other_val = bool(other)
+        if self._is_inf:
+            return self._value  # ∞T > anything, ∞F < anything
+        return self._value > other_val
+    
+    def __le__(self, other):
+        """Less than or equal comparison."""
+        return self < other or self == other
+    
+    def __ge__(self, other):
+        """Greater than or equal comparison."""
+        return self > other or self == other
     
     def __hash__(self):
         """Hash value."""
@@ -106,10 +159,6 @@ class bool_inf:
     def __invert__(self):
         """Logical NOT operation."""
         return bool_inf(not self._value)
-    
-    def __bool__(self):
-        """Return the boolean value."""
-        return self._value
     
     class _bool_inf_array(InfiniteDiagonal):
         """
@@ -336,6 +385,26 @@ if __name__ == "__main__":
     print(f"   {b1} | False = {b1 | False}")
     print(f"   {b2} ^ {b3} = {b2 ^ b3}")
     print(f"   ~{b1} = {~b1}")
+    
+    print("\n2a. Testing bool_inf comparison operations:")
+    b4 = bool_inf(False)  # Regular False
+    b5 = bool_inf(True)   # Regular True
+    b6 = bool_inf()       # ∞T
+    # Create ∞F (infinite false)
+    b7 = bool_inf(False)
+    b7._is_inf = True
+    print(f"   Equality: {b2} == {b5} = {b2 == b5}")
+    print(f"   Equality: {b1} == {b6} = {b1 == b6}")
+    print(f"   Less than: {b4} < {b5} = {b4 < b5}")
+    print(f"   Less than: {b7} < {b4} = {b7 < b4}  (∞F < False)")
+    print(f"   Less than: {b5} < {b6} = {b5 < b6}  (True < ∞T)")
+    print(f"   Greater than: {b5} > {b4} = {b5 > b4}")
+    print(f"   Greater than: {b6} > {b5} = {b6 > b5}  (∞T > True)")
+    print(f"   Greater than: {b4} > {b7} = {b4 > b7}  (False > ∞F)")
+    print(f"   Less or equal: {b4} <= {b5} = {b4 <= b5}")
+    print(f"   Greater or equal: {b5} >= {b4} = {b5 >= b4}")
+    print(f"   Comparison with bool: {b4} < True = {b4 < True}")
+    print(f"   Comparison with bool: {b6} > False = {b6 > False}")
     
     # Test bool_inf_array with alternating pattern
     print("\n3. Creating bool_inf_array with alternating pattern:")

@@ -169,6 +169,7 @@ Infinite diagonal arrays with boolean infinity values, supporting logical operat
 - ✅ Cached arrays with mutation support
 - ✅ Multiple generation patterns
 - ✅ Element-wise logical operations
+- ✅ Comparison operators (==, <, >, <=, >=)
 
 ### Usage
 
@@ -196,6 +197,25 @@ bool_arr.set_diagonal_value(5, False)
 result = bool_arr & true_arr  # Element-wise AND
 result = bool_arr | true_arr  # Element-wise OR
 result = ~bool_arr           # Element-wise NOT
+
+# Comparison operations
+b1 = bool_inf()      # ∞T
+b2 = bool_inf(True)  # True
+b3 = bool_inf(False) # False
+b4 = bool_inf(False)
+b4._is_inf = True    # ∞F
+
+# Ordering: ∞F < False < True < ∞T
+print(b3 < b2)       # True (False < True)
+print(b4 < b3)       # True (∞F < False)
+print(b1 > b2)       # True (∞T > True)
+print(b2 == b2)      # True (equality)
+print(b3 <= b2)      # True (False <= True)
+print(b1 >= b2)      # True (∞T >= True)
+
+# Compare with regular bool
+print(b3 < True)     # True
+print(b1 > False)    # True
 ```
 
 ### Patterns
@@ -204,6 +224,22 @@ result = ~bool_arr           # Element-wise NOT
 - `"all_true"`: All True values
 - `"all_false"`: All False values
 - `"infinite"`: All `bool_inf(∞)` values
+
+### Comparison Operators
+
+The `bool_inf` class supports all comparison operators with a well-defined ordering:
+
+**Ordering**: `∞F < False < True < ∞T`
+
+- **Equality (`==`)**: Compares both value and infinity state
+- **Less than (`<`)**: Returns `True` if left operand is less than right
+- **Greater than (`>`)**: Returns `True` if left operand is greater than right
+- **Less or equal (`<=`)**: Combination of `<` and `==`
+- **Greater or equal (`>=`)**: Combination of `>` and `==`
+
+All comparison operators work with:
+- `bool_inf` instances
+- Regular Python `bool` values
 
 ### Example Output
 
@@ -358,6 +394,16 @@ arr.set_diagonal_value(10, True)
 # Logical operations
 all_true = bool_inf.bool_inf_array.from_pattern("all_true")
 result = arr & all_true
+
+# Comparison operations
+b1 = bool_inf()      # ∞T
+b2 = bool_inf(True)   # True
+b3 = bool_inf(False)  # False
+
+# Demonstrate ordering: ∞F < False < True < ∞T
+print(f"{b3} < {b2} = {b3 < b2}")  # False < True = True
+print(f"{b1} > {b2} = {b1 > b2}")  # ∞T > True = True
+print(f"{b2} == {b2} = {b2 == b2}")  # True == True = True
 ```
 
 ### Complete Example: Negative Infinity Arrays
